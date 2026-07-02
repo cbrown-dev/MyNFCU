@@ -57,6 +57,39 @@ app.post("/create_link_token", async function (request, response) {
   }
 });
 
+app.post("/auth", async function (request, response) {
+  try {
+    const access_token = request.body.access_token;
+    const plaidRequest = {
+      access_token: access_token,
+    };
+    const plaidResponse = await plaidClient.authGet(plaidRequest);
+    response.json(plaidResponse.data);
+  } catch (e) {
+    response.status(500).send("Auth endpoint failed");
+  }
+});
+
+app.post("/exchange_public_token", async function (request, response, next) {
+  const publicToken = request.body.public_token;
+  try {
+    const tokenResponse = await plaidClient.itemPublicTokenExchange({
+      public_token: publicToken,
+    });
+
+    // These values should be saved to a persistent database and
+    // associated with the currently signed-in user
+    const accessToken = tokenResponse.data.access_token;
+
+    response.json({ accessToken });
+  } catch (error) {
+    // handle error
+    response
+      .status(500)
+      .send("Error exchanging public token: " + error.message);
+  }
+});
+
 app.listen(8000, () => {
   console.log("Server is running on port 8000");
 });
