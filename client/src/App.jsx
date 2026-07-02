@@ -11,7 +11,7 @@ function App() {
   // AJAX request
   useEffect(() => {
     async function fetch() {
-      const response = await axios.post("/test", { name: "Calvin Brown" });
+      const response = await axios.post("/create_link_token");
       console.log("response: ", response.data);
     }
     fetch();
