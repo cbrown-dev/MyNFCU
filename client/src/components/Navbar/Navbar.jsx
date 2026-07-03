@@ -1,13 +1,21 @@
+import "./Navbar.css";
+
 function Navbar() {
   return (
-    <header>
-      <nav>
-        {/* Logo */}
+    <header className="navbar">
+      <div className="navbar__brand">
+        <h2>Pattern</h2>
+      </div>
 
-        {/* Navigation Links */}
+      <div className="navbar__actions">
+        <button className="navbar__icon" aria-label="Notifications">
+          🔔
+        </button>
 
-        {/* User Menu */}
-      </nav>
+        <button className="navbar__profile">
+          <span className="navbar__avatar">CB</span>
+        </button>
+      </div>
     </header>
   );
 }

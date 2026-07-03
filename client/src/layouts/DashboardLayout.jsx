@@ -7,10 +7,10 @@ function DashboardLayout() {
     <>
       <Navbar />
 
-      <main>
+      <main className="dashboard-layout">
         <Sidebar />
 
-        <section>
+        <section className="dashboard-content">
           <ConnectBankButton />
         </section>
       </main>
