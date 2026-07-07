@@ -1,6 +1,7 @@
+import "./DashboardLayout.css";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
-import ConnectBankButton from "../components/ConnectBankButton";
+import DashboardPage from "../pages/DashboardPage";
 
 function DashboardLayout() {
   return (
@@ -10,9 +11,7 @@ function DashboardLayout() {
       <main className="dashboard-layout">
         <Sidebar />
 
-        <section className="dashboard-content">
-          <ConnectBankButton />
-        </section>
+        <DashboardPage />
       </main>
     </>
   );

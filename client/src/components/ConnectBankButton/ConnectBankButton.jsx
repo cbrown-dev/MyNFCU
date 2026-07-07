@@ -3,47 +3,49 @@ import axios from "axios";
 import { usePlaidLink } from "react-plaid-link";
 import "./ConnectBankButton.css";
 
-function PlaidAuth({ publicToken }) {
-  const [account, setAccount] = useState();
+function ConnectBankButton({ onBankDataLoaded }) {
+  const [linkToken, setLinkToken] = useState(null);
+  const [publicToken, setPublicToken] = useState(null);
 
+  // Request a Link Token when the component mounts
   useEffect(() => {
-    async function fetchData() {
-      const accessToken = await axios.post("/exchange_public_token", {
-        public_token: publicToken,
-      });
-
-      const auth = await axios.post("/auth", {
-        access_token: accessToken.data.accessToken,
-      });
-
-      setAccount(auth.data.numbers.ach[0]);
+    async function fetchLinkToken() {
+      try {
+        const response = await axios.post("/create_link_token");
+        setLinkToken(response.data.link_token);
+      } catch (error) {
+        console.error("Error creating Link Token:", error);
+      }
     }
 
-    fetchData();
-  }, [publicToken]);
-
-  return (
-    account && (
-      <>
-        <p>Account number: {account.account}</p>
-        <p>Routing number: {account.routing}</p>
-      </>
-    )
-  );
-}
-
-function ConnectBankButton() {
-  const [linkToken, setLinkToken] = useState();
-  const [publicToken, setPublicToken] = useState();
-
-  useEffect(() => {
-    async function fetchToken() {
-      const response = await axios.post("/create_link_token");
-      setLinkToken(response.data.link_token);
-    }
-
-    fetchToken();
+    fetchLinkToken();
   }, []);
+
+  // Exchange the Public Token for an Access Token and fetch bank data
+  useEffect(() => {
+    if (!publicToken) return;
+
+    async function fetchBankData() {
+      try {
+        const tokenResponse = await axios.post("/exchange_public_token", {
+          public_token: publicToken,
+        });
+
+        const authResponse = await axios.post("/auth", {
+          access_token: tokenResponse.data.accessToken,
+        });
+
+        // Send the bank data back to the parent component
+        if (onBankDataLoaded) {
+          onBankDataLoaded(authResponse.data);
+        }
+      } catch (error) {
+        console.error("Error retrieving bank data:", error);
+      }
+    }
+
+    fetchBankData();
+  }, [publicToken, onBankDataLoaded]);
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
@@ -52,11 +54,9 @@ function ConnectBankButton() {
     },
   });
 
-  return publicToken ? (
-    <PlaidAuth publicToken={publicToken} />
-  ) : (
+  return (
     <button onClick={() => open()} disabled={!ready}>
-      Connect a bank account
+      Connect a Bank Account
     </button>
   );
 }
