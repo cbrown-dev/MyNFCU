@@ -43,7 +43,7 @@ app.post("/create_link_token", async function (request, response) {
       client_user_id: "user",
     },
     client_name: "Plaid Test App",
-    products: ["auth"],
+    products: ["auth", "transactions"],
     language: "en",
     country_codes: ["US"],
   };
@@ -54,19 +54,6 @@ app.post("/create_link_token", async function (request, response) {
   } catch (error) {
     console.error(error.response?.data || error);
     response.status(500).json(error.response?.data || error);
-  }
-});
-
-app.post("/auth", async function (request, response) {
-  try {
-    const access_token = request.body.access_token;
-    const plaidRequest = {
-      access_token: access_token,
-    };
-    const plaidResponse = await plaidClient.authGet(plaidRequest);
-    response.json(plaidResponse.data);
-  } catch (e) {
-    response.status(500).send("Auth endpoint failed");
   }
 });
 
@@ -89,7 +76,48 @@ app.post("/exchange_public_token", async function (request, response, next) {
       .send("Error exchanging public token: " + error.message);
   }
 });
+app.post("/dashboard", async (req, res) => {
+  try {
+    const { access_token } = req.body;
 
+    // Last 30 days
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 30);
+
+    // Fetch everything in parallel
+    const [authResponse, balanceResponse, transactionResponse] =
+      await Promise.all([
+        plaidClient.authGet({
+          access_token,
+        }),
+
+        plaidClient.accountsBalanceGet({
+          access_token,
+        }),
+
+        plaidClient.transactionsGet({
+          access_token,
+          start_date: startDate.toISOString().split("T")[0],
+          end_date: endDate.toISOString().split("T")[0],
+        }),
+      ]);
+
+    res.json({
+      auth: authResponse.data,
+      accounts: balanceResponse.data.accounts,
+      transactions: transactionResponse.data.transactions,
+    });
+  } catch (err) {
+    console.error(err.response?.data || err);
+
+    res.status(500).json(
+      err.response?.data || {
+        error: "Unable to load dashboard",
+      },
+    );
+  }
+});
 app.listen(8000, () => {
   console.log("Server is running on port 8000");
 });

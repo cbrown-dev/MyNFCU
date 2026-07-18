@@ -31,13 +31,20 @@ function ConnectBankButton({ onBankDataLoaded }) {
           public_token: publicToken,
         });
 
-        const authResponse = await axios.post("/auth", {
-          access_token: tokenResponse.data.accessToken,
+        const accessToken = tokenResponse.data.accessToken;
+
+        const dashboardResponse = await axios.post("/dashboard", {
+          access_token: accessToken,
         });
 
+        onBankDataLoaded(dashboardResponse.data);
         // Send the bank data back to the parent component
         if (onBankDataLoaded) {
-          onBankDataLoaded(authResponse.data);
+          onBankDataLoaded({
+            auth: authResponse.data,
+            transactions: transactionResponse.data,
+            accounts: balanceResponse.data,
+          });
         }
       } catch (error) {
         console.error("Error retrieving bank data:", error);
